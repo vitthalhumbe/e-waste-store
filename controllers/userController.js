@@ -27,7 +27,7 @@ const registerUser = async (req, res) => {
     });
 
     // Create token and respond
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id, user_type: user.user_type }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.status(201).json({
       _id: user._id,
       username: user.username,
@@ -50,7 +50,7 @@ const loginUser = async (req, res) => {
 
     // If user exists and password matches, send back token
     if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+      const token = jwt.sign({ id: user._id, user_type: user.user_type }, process.env.JWT_SECRET, { expiresIn: '30d' });
       res.json({
         _id: user._id,
         username: user.username,
