@@ -2,6 +2,7 @@
 // Import necessary packages
 const express = require('express');
 const cors = require('cors');
+
 require('dotenv').config(); // Load environment variables from .env file
 
 const connectDB = require('./config/db');

@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+
+const ListingSchema = new mongoose.Schema({
+  disposer_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    // We are keeping this 'required: false' for now so you can test the form.
+    // We will change it to 'true' after we build the user login feature.
+    required: false, 
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  device_type: {
+    type: String,
+    required: true,
+  },
+  condition: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['Available', 'Pending Pickup', 'Collected'],
+    default: 'Available', // New listings will automatically have this status
+  },
+  latitude: {
+    type: Number,
+  },
+  longitude: {
+    type: Number,
+  },
+}, {
+  timestamps: true, // This automatically adds 'createdAt' and 'updatedAt' fields
+});
+
+module.exports = mongoose.model('Listing', ListingSchema);
