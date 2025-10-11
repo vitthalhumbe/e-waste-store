@@ -1,66 +1,67 @@
+// controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// @desc    Register a new user
-// @route   POST /api/users/register
+// --- UPDATED registerUser function ---
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password, user_type } = req.body;
+    const { username, email, password, user_type, spcb_authorization_number } = req.body;
 
     // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+    if (await User.findOne({ email })) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+    if (await User.findOne({ username })) {
+      return res.status(400).json({ message: 'Username is already taken' });
     }
 
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user
-    const user = await User.create({
+    const newUser = {
       username,
       email,
       password: hashedPassword,
       user_type,
-    });
+    };
 
-    // Create token and respond
-    const token = jwt.sign({ id: user._id, user_type: user.user_type, username: user.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.status(201).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      token,
-    });
+    // --- Verification Logic ---
+    if (user_type === 'Collector') {
+      if (!spcb_authorization_number) {
+        return res.status(400).json({ message: 'SPCB Authorization Number is required for Collectors.' });
+      }
+      newUser.spcb_authorization_number = spcb_authorization_number;
+      newUser.account_status = 'Pending'; // Collectors need admin approval
+    }
+
+    const user = await User.create(newUser);
+    res.status(201).json({ _id: user._id, username: user.username, message: "Registration successful. Collector accounts require approval." });
+
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
 };
 
-// @desc    Authenticate/login a user
-// @route   POST /api/users/login
+// --- UPDATED loginUser function ---
 const loginUser = async (req, res) => {
   try {
     const { email, username, password } = req.body;
-
-    // Find the user by either email or username
     const user = await User.findOne(email ? { email } : { username });
 
-    // If user exists and password matches, send back token
     if (user && (await bcrypt.compare(password, user.password))) {
+      // --- Approval Check ---
+      if (user.account_status !== 'Approved') {
+        return res.status(403).json({ message: `Your account is currently ${user.account_status}. Please wait for admin approval.` });
+      }
+
       const token = jwt.sign(
         { id: user._id, user_type: user.user_type, username: user.username },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
       );
-      res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        token,
-      });
+      res.json({ token });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }

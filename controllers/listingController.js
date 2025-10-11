@@ -99,10 +99,22 @@ const deleteListing = async (req, res) => {
   }
 };
 
+// @desc    Get listings for the logged-in user
+// @route   GET /api/listings/my-listings
+const getMyListings = async (req, res) => {
+  try {
+    // req.user.id comes from our 'protect' middleware
+    const listings = await Listing.find({ disposer_id: req.user.id }).populate('disposer_id', 'username');
+    res.json(listings);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
 module.exports = {
   createListing,
   getAllListings,
   getListingById,
   updateListing,
   deleteListing,
+  getMyListings,
 };
