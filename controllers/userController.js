@@ -59,11 +59,11 @@ const loginUser = async (req, res) => {
       }
 
       const token = jwt.sign(
-        { id: user._id, user_type: user.user_type, username: user.username },
+        { id: user._id, user_type: user.user_type, username: user.username, green_points: user.green_points },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
       );
-      res.json({ token });
+      res.json({ token }); // The token now contains the points
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }

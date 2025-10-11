@@ -1,5 +1,6 @@
 const Listing = require('../models/Listing');
 const cloudinary = require('../config/cloudinary');
+const User = require('../models/User');
 // @desc    Create a new listing
 // @route   POST /api/listings
 const createListing = async (req, res) => {
@@ -158,7 +159,7 @@ const getMyListings = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
-// @desc    Update a listing's status
+// @desc    Update a listing's status and award points
 // @route   PUT /api/listings/:id/status
 const updateListingStatus = async (req, res) => {
   try {
@@ -167,14 +168,25 @@ const updateListingStatus = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
 
-    // Verify the logged-in user owns this listing
+    // Verify ownership
     if (listing.disposer_id.toString() !== req.user.id) {
       return res.status(401).json({ message: 'User not authorized' });
     }
 
-    listing.status = 'Collected'; // Update the status
+    // --- NEW GAMIFICATION LOGIC ---
+    // Only award points if the status is changing to 'Collected' for the first time
+    if (listing.status !== 'Collected') {
+      const disposer = await User.findById(listing.disposer_id);
+      if (disposer) {
+        disposer.green_points += 10; // Award 10 points
+        await disposer.save();
+      }
+    }
+    // ----------------------------
+
+    listing.status = 'Collected';
     await listing.save();
-    res.json({ message: 'Listing status updated to Collected' });
+    res.json({ message: 'Listing status updated and points awarded!' });
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
