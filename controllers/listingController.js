@@ -99,14 +99,40 @@ const deleteListing = async (req, res) => {
   }
 };
 
+// controllers/listingController.js
+
 // @desc    Get listings for the logged-in user
 // @route   GET /api/listings/my-listings
 const getMyListings = async (req, res) => {
+  console.log('--- Entering getMyListings function ---'); // Log 1
+
   try {
-    // req.user.id comes from our 'protect' middleware
-    const listings = await Listing.find({ disposer_id: req.user.id }).populate('disposer_id', 'username');
+    // Check if the middleware provided the user object
+    if (!req.user) {
+      console.error('CRITICAL: req.user is NOT DEFINED. Middleware might have failed.');
+      return res.status(401).json({ message: 'Not authorized, user data missing.' });
+    }
+    console.log('Step 1: req.user object exists:', req.user); // Log 2
+
+    // Check if the user object has an ID
+    if (!req.user.id) {
+        console.error('CRITICAL: req.user.id is NOT DEFINED.');
+        return res.status(500).json({ message: 'Server error, user ID is missing.'});
+    }
+    console.log('Step 2: req.user.id is:', req.user.id); // Log 3
+
+    // Now, try to find the listings
+    const listings = await Listing.find({ disposer_id: req.user.id }).populate(
+      'disposer_id',
+      'username'
+    );
+    console.log('Step 3: Found listings:', listings.length); // Log 4
+
     res.json(listings);
+
   } catch (error) {
+    // This will now catch and print any error during the process
+    console.error('---!!! CRASH in getMyListings !!!---:', error); 
     res.status(500).json({ message: 'Server Error' });
   }
 };
