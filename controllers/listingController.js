@@ -36,9 +36,19 @@ const createListing = async (req, res) => {
 
 // @desc    Get all available listings
 // @route   GET /api/listings
+// controllers/listingController.js
 const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ status: 'Available' }).populate('disposer_id', 'username');
+    // 1. Create a filter object
+    const filter = { status: 'Available' };
+
+    // 2. Check if a device_type query parameter was sent
+    if (req.query.device_type) {
+      filter.device_type = req.query.device_type;
+    }
+
+    // 3. Use the filter object in the find query
+    const listings = await Listing.find(filter).populate('disposer_id', 'username');
     res.json(listings);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -49,7 +59,8 @@ const getAllListings = async (req, res) => {
 // @route   GET /api/listings/:id
 const getListingById = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('disposer_id', 'username');
+    const listing = await Listing.findById(req.params.id)
+  .populate('disposer_id', 'username email mobile_number');
 
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });

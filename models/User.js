@@ -21,6 +21,15 @@ const UserSchema = new mongoose.Schema({
     enum: ['Disposer', 'Collector'],
     required: true,
   },
+  // --- ADD THESE NEW FIELDS ---
+  mobile_number: {
+    type: String,
+    default: '',
+  },
+  address: {
+    type: String,
+    default: '',
+  },
   green_points: {
     type: Number,
     default: 0,

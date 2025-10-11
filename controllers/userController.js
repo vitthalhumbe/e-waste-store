@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 // --- UPDATED registerUser function ---
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password, user_type, spcb_authorization_number } = req.body;
+    const { username, email, password, user_type, spcb_authorization_number, mobile_number, address } = req.body;
 
     // Check if user already exists
     if (await User.findOne({ email })) {
@@ -25,6 +25,8 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       user_type,
+      mobile_number, // <-- Add this
+  address, 
     };
 
     // --- Verification Logic ---

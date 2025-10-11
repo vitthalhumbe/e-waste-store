@@ -2,7 +2,7 @@
 // Import necessary packages
 const express = require('express');
 const cors = require('cors');
-
+const adminRoutes = require('./routes/adminRoutes');
 require('dotenv').config(); // Load environment variables from .env file
 
 const connectDB = require('./config/db');
@@ -25,7 +25,7 @@ app.use(express.json()); // Allow the server to accept JSON in the request body
 app.use('/api/users', userRoutes);
 app.use('/api/listings', listingRoutes);
 
-
+app.use('/api/admin', adminRoutes);
 // A simple test route to make sure the server is working
 app.get('/', (req, res) => {
   res.send('E-Waste Marketplace API is running!');
