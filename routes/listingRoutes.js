@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/authMiddleware'); // <-- Import
 const {
   createListing,
   getAllListings,
@@ -8,11 +9,12 @@ const {
   deleteListing,
 } = require('../controllers/listingController');
 
-// Define the routes
-router.post('/', createListing);
 router.get('/', getAllListings);
 router.get('/:id', getListingById);
-router.put('/:id', updateListing);
-router.delete('/:id', deleteListing);
+
+// Add 'protect' to these routes
+router.post('/', protect, createListing);
+router.put('/:id', protect, updateListing);
+router.delete('/:id', protect, deleteListing);
 
 module.exports = router;

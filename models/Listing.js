@@ -4,9 +4,7 @@ const ListingSchema = new mongoose.Schema({
   disposer_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    // We are keeping this 'required: false' for now so you can test the form.
-    // We will change it to 'true' after we build the user login feature.
-    required: false, 
+    required: true, 
   },
   title: {
     type: String,

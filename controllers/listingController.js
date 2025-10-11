@@ -5,7 +5,6 @@ const Listing = require('../models/Listing');
 const createListing = async (req, res) => {
   try {
     const { title, description, device_type, condition, latitude, longitude } = req.body;
-    // Note: In the future, you'll get the disposer_id from the authenticated user's token
     const newListing = new Listing({
       title,
       description,
@@ -13,9 +12,8 @@ const createListing = async (req, res) => {
       condition,
       latitude,
       longitude,
-      // disposer_id: req.user.id // This is how you'll link it to a user
+      disposer_id: req.user.id, // <-- Add the logged-in user's ID
     });
-
     const savedListing = await newListing.save();
     res.status(201).json(savedListing);
   } catch (error) {
@@ -23,11 +21,12 @@ const createListing = async (req, res) => {
   }
 };
 
+
 // @desc    Get all available listings
 // @route   GET /api/listings
 const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ status: 'Available' });
+    const listings = await Listing.find({ status: 'Available' }).populate('disposer_id', 'username');
     res.json(listings);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -38,7 +37,7 @@ const getAllListings = async (req, res) => {
 // @route   GET /api/listings/:id
 const getListingById = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id);
+    const listing = await Listing.findById(req.params.id).populate('disposer_id', 'username');
 
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
@@ -54,16 +53,15 @@ const getListingById = async (req, res) => {
 // @route   PUT /api/listings/:id
 const updateListing = async (req, res) => {
   try {
-    const updatedListing = await Listing.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true } // {new: true} returns the modified document
-    );
-
-    if (!updatedListing) {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
-
+    // Check if the user owns the listing
+    if (listing.disposer_id.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+    const updatedListing = await Listing.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedListing);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -74,12 +72,15 @@ const updateListing = async (req, res) => {
 // @route   DELETE /api/listings/:id
 const deleteListing = async (req, res) => {
   try {
-    const listing = await Listing.findByIdAndDelete(req.params.id);
-
+    const listing = await Listing.findById(req.params.id);
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
-
+    // Check if the user owns the listing
+    if (listing.disposer_id.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+    await listing.deleteOne();
     res.json({ message: 'Listing removed successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
