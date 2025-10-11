@@ -37,17 +37,28 @@ const createListing = async (req, res) => {
 // @desc    Get all available listings
 // @route   GET /api/listings
 // controllers/listingController.js
+// controllers/listingController.js
+
 const getAllListings = async (req, res) => {
   try {
-    // 1. Create a filter object
     const filter = { status: 'Available' };
 
-    // 2. Check if a device_type query parameter was sent
+    // Handle device_type filter
     if (req.query.device_type) {
       filter.device_type = req.query.device_type;
     }
 
-    // 3. Use the filter object in the find query
+    // --- NEW SEARCH LOGIC ---
+    // Handle search term filter
+    if (req.query.search) {
+      // This creates a case-insensitive search for the term in the title or description
+      filter.$or = [
+        { title: { $regex: req.query.search, $options: 'i' } },
+        { description: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+    // -------------------------
+
     const listings = await Listing.find(filter).populate('disposer_id', 'username');
     res.json(listings);
   } catch (error) {
