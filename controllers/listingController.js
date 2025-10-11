@@ -147,6 +147,29 @@ const getMyListings = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+// @desc    Update a listing's status
+// @route   PUT /api/listings/:id/status
+const updateListingStatus = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    // Verify the logged-in user owns this listing
+    if (listing.disposer_id.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    listing.status = 'Collected'; // Update the status
+    await listing.save();
+    res.json({ message: 'Listing status updated to Collected' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+
 module.exports = {
   createListing,
   getAllListings,
@@ -154,4 +177,5 @@ module.exports = {
   updateListing,
   deleteListing,
   getMyListings,
+  updateListingStatus,
 };

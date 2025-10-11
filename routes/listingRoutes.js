@@ -11,6 +11,7 @@ const {
   updateListing,
   deleteListing,
   getMyListings,
+  updateListingStatus,
 } = require('../controllers/listingController');
 
 // Setup multer
@@ -33,5 +34,5 @@ router.get('/:id', getListingById);
 router.post('/', protect, upload.single('image'), createListing);
 router.put('/:id', protect, updateListing);
 router.delete('/:id', protect, deleteListing);
-
+router.put('/:id/status', protect, updateListingStatus);
 module.exports = router;
