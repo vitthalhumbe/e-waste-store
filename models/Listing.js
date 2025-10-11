@@ -33,6 +33,9 @@ const ListingSchema = new mongoose.Schema({
   longitude: {
     type: Number,
   },
+  imageUrl: {
+    type: String, // We will store the URL of the uploaded image
+  },
 }, {
   timestamps: true, // This automatically adds 'createdAt' and 'updatedAt' fields
 });

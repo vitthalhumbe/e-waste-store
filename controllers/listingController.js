@@ -1,9 +1,19 @@
 const Listing = require('../models/Listing');
-
+const cloudinary = require('../config/cloudinary');
 // @desc    Create a new listing
 // @route   POST /api/listings
 const createListing = async (req, res) => {
   try {
+    let imageUrl = '';
+    // Check if a file was uploaded
+    if (req.file) {
+      // Upload the image to Cloudinary
+      const result = await cloudinary.uploader.upload(
+        `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+      );
+      imageUrl = result.secure_url;
+    }
+
     const { title, description, device_type, condition, latitude, longitude } = req.body;
     const newListing = new Listing({
       title,
@@ -12,15 +22,17 @@ const createListing = async (req, res) => {
       condition,
       latitude,
       longitude,
-      disposer_id: req.user.id, // <-- Add the logged-in user's ID
+      imageUrl, // Save the image URL to the database
+      disposer_id: req.user.id,
     });
+
     const savedListing = await newListing.save();
     res.status(201).json(savedListing);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    console.error("Error creating listing:", error);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
-
 
 // @desc    Get all available listings
 // @route   GET /api/listings
