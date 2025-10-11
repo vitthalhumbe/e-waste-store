@@ -43,14 +43,18 @@ const registerUser = async (req, res) => {
 // @route   POST /api/users/login
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
 
-    // Check for user by email
-    const user = await User.findOne({ email });
+    // Find the user by either email or username
+    const user = await User.findOne(email ? { email } : { username });
 
     // If user exists and password matches, send back token
     if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign({ id: user._id, user_type: user.user_type, username: user.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
+      const token = jwt.sign(
+        { id: user._id, user_type: user.user_type, username: user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+      );
       res.json({
         _id: user._id,
         username: user.username,
